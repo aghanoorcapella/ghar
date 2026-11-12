@@ -1,0 +1,720 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ghar: The Family Sim</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;800&display=swap">
+<style>
+/* Layout: a "truck-art" framed scene up top, character console below; one deliberate dark night-bazaar look */
+:root{
+  --ink:#140f24; --panel:#1f1836; --panel2:#2a2148; --line:#3d3166;
+  --fg:#f6efe1; --dim:#b9add6;
+  --saffron:#ffb627; --rose:#ff4f7b; --teal:#19c3b0; --leaf:#7bd34a; --sky:#5aa9ff;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%}
+body{background:var(--ink);color:var(--fg);font-family:var(--body);font-size:15px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;}
+button{font-family:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--saffron);outline-offset:2px}
+.wrap{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:12px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;justify-content:space-between}
+.logo{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;letter-spacing:.5px;
+  background:linear-gradient(90deg,var(--saffron),var(--rose) 50%,var(--teal));-webkit-background-clip:text;background-clip:text;color:transparent}
+.logo small{display:block;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);-webkit-text-fill-color:var(--dim);font-family:var(--body);font-weight:800;margin-top:4px}
+.clocks{display:flex;gap:8px;flex-wrap:wrap}
+.clock{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 10px;min-width:118px}
+.clock b{display:block;font-family:var(--display);font-size:20px;line-height:1.1;font-variant-numeric:tabular-nums}
+.clock span{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--dim)}
+.iconbtn{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:8px 12px;font-weight:800}
+.stage{position:relative;border-radius:14px;padding:6px;
+  background:repeating-linear-gradient(45deg,var(--saffron) 0 10px,var(--rose) 10px 20px,var(--teal) 20px 30px,var(--leaf) 30px 40px)}
+.stage canvas{display:block;width:100%;aspect-ratio:16/8;max-width:100%;border-radius:9px;background:#000}
+.loc-tag{position:absolute;left:18px;top:16px;background:rgba(20,15,36,.82);border-radius:8px;padding:4px 10px;font-weight:800;font-size:13px}
+.toast{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);background:rgba(20,15,36,.9);border:1px solid var(--saffron);
+  border-radius:10px;padding:8px 14px;font-weight:700;max-width:90%;text-align:center;transition:opacity .4s}
+.grid{display:grid;grid-template-columns:260px 1fr 260px;gap:12px}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+h2{font-family:var(--display);font-size:18px;margin:0 0 8px;font-weight:700;text-wrap:balance}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:1.3px;color:var(--dim);font-weight:800}
+.fam{display:flex;flex-direction:column;gap:6px}
+.mem{display:flex;align-items:center;gap:10px;background:var(--panel2);border:2px solid transparent;border-radius:10px;padding:7px 9px;text-align:left;width:100%}
+.mem.on{border-color:var(--saffron)}
+.mem .av{width:34px;height:34px;border-radius:50%;flex:none;display:grid;place-items:center;font-family:var(--display);font-weight:800;color:#140f24;font-size:17px}
+.mem .nm{font-weight:800;line-height:1.1}
+.mem .sub{font-size:11px;color:var(--dim)}
+.mem .where{margin-left:auto;font-size:11px;color:var(--dim);text-align:right}
+.bar{height:8px;background:#120d22;border-radius:5px;overflow:hidden;margin-top:3px}
+.bar i{display:block;height:100%;border-radius:5px;transition:width .4s}
+.needs{display:grid;grid-template-columns:1fr 1fr;gap:8px 12px;margin:8px 0 12px}
+.needs div{font-size:12px;font-weight:700}
+.who{display:flex;gap:12px;align-items:center;margin-bottom:6px}
+.who .av{width:52px;height:52px;font-size:26px;border-radius:50%;display:grid;place-items:center;font-family:var(--display);font-weight:800;color:#140f24;flex:none}
+.who p{margin:2px 0 0;color:var(--dim);font-size:13px}
+.acts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.act{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 10px;text-align:left;display:flex;flex-direction:column;gap:2px;transition:transform .1s,border-color .1s}
+.act:hover:not(:disabled){border-color:var(--saffron);transform:translateY(-1px)}
+.act:disabled{opacity:.4;cursor:not-allowed}
+.act b{font-size:14px}
+.act small{font-size:11px;color:var(--dim)}
+.act.game{border-color:var(--teal)}
+.act.game b::after{content:" ★ game";font-size:10px;color:var(--teal);letter-spacing:.5px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.stat{background:var(--panel2);border-radius:9px;padding:6px 8px}
+.stat b{font-family:var(--display);font-size:19px;display:block;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat span{font-size:11px;color:var(--dim)}
+.log{display:flex;flex-direction:column;gap:5px;max-height:230px;overflow:auto;font-size:13px}
+.log p{margin:0;padding:5px 8px;background:var(--panel2);border-radius:7px;line-height:1.35}
+.log p em{color:var(--saffron);font-style:normal;font-weight:800}
+.bondwrap{margin-bottom:10px}
+.bondwrap .bar{height:12px}
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(10,7,20,.82);display:grid;place-items:center;z-index:50;
+  padding:max(12px,env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) max(12px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+.box{background:var(--panel);border:3px solid var(--saffron);border-radius:16px;padding:18px;width:min(640px,100%);max-height:100%;overflow:auto}
+.box h1{font-family:var(--display);font-size:30px;margin:0 0 6px;line-height:1.1;text-wrap:balance}
+.box p{line-height:1.5;margin:6px 0}
+.box .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{background:var(--saffron);color:#140f24;border:0;border-radius:10px;padding:10px 16px;font-weight:800;font-size:15px}
+.btn.alt{background:var(--panel2);color:var(--fg);border:1px solid var(--line)}
+.mg canvas{width:100%;max-width:100%;aspect-ratio:4/3;display:block;border-radius:10px;background:#000;touch-action:none}
+.mghud{display:flex;justify-content:space-between;font-weight:800;margin:6px 0;font-variant-numeric:tabular-nums}
+.pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:10px}
+.pick button{background:var(--panel2);border:2px solid var(--line);border-radius:12px;padding:10px;text-align:left}
+.pick button:hover{border-color:var(--saffron)}
+.ach{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.ach div{background:var(--panel2);border-radius:8px;padding:6px 10px;font-size:13px}
+.ach div.lock{opacity:.4}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head><body>
+
+<div class="wrap">
+  <header>
+    <div class="logo">Ghar<small>Karachi · Shikarpur · Des Moines</small></div>
+    <div class="clocks">
+      <div class="clock"><span>Day</span><b id="cDay">1</b></div>
+      <div class="clock"><span>Pakistan (PKT)</span><b id="cPk">7:00 AM</b></div>
+      <div class="clock"><span>Noor · Des Moines</span><b id="cUs">8:00 PM</b></div>
+      <button class="iconbtn" id="btnMenu">Menu</button>
+    </div>
+  </header>
+
+  <div class="stage">
+    <canvas id="scene" width="1280" height="640"></canvas>
+    <div class="loc-tag" id="locTag">Home</div>
+    <div class="toast" id="toast" style="opacity:0"></div>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>The family</h2>
+      <div class="fam" id="fam"></div>
+    </div>
+    <div class="card">
+      <div class="who" id="who"></div>
+      <div class="needs" id="needs"></div>
+      <div class="lbl" style="margin-bottom:6px">What should they do?</div>
+      <div class="acts" id="acts"></div>
+    </div>
+    <div class="card">
+      <div class="bondwrap">
+        <div class="lbl">Family bond · reunion at 100</div>
+        <div class="bar"><i id="bondBar" style="width:20%;background:linear-gradient(90deg,var(--rose),var(--saffron))"></i></div>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="lbl" style="margin-bottom:6px">Family diary</div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+</div>
+<div class="modal" id="modal" hidden><div class="box" id="box"></div></div>
+<script>
+// ===== DATA =====
+const PEOPLE = {
+  noor:  {name:"Noor",  role:"YouTuber · double graduate", age:22, color:"#ffb627", init:"N", home:"desmoines",
+          bio:"Came to the USA in Aug 2023. BS Computer Science (WGU) and MBA in Project Management (Capella), both done back to back. Vlogs from Des Moines, watches UFC with the family over video call."},
+  tozia: {name:"Tozia", role:"Mom · heart of the house", age:41, color:"#ff4f7b", init:"T", home:"karachi",
+          bio:"Runs the whole house. Talks to her 5 sisters every single day. Nothing happens in this family that she doesn't hear about first."},
+  mir:   {name:"Mir",   role:"Dad · ex-5 Horse, landlord", age:51, color:"#19c3b0", init:"M", home:"karachi",
+          bio:"Served in the Armored Corps, 5 Horse. Now an agricultural landlord with lands around Sultan Kot. Loves a good movie on Apple TV."},
+  umair: {name:"Umair", role:"Brother · future dentist", age:19, color:"#5aa9ff", init:"U", home:"karachi",
+          bio:"MDCAT top 100 in Shikarpur, 90%+ in matric and FSc. Studying dentistry, runs a YouTube channel, Messi fan for life, UFC fanatic."},
+  ariha: {name:"Ariha", role:"Sister · chicken queen", age:10, color:"#7bd34a", init:"A", home:"karachi",
+          bio:"Loves her pet chickens more than anything. Swimming classes, school, and racing her bicycle."}
+};
+const ORDER = ["noor","tozia","mir","umair","ariha"];
+const LOCS = {
+  karachi:   {name:"Clifton Block 2 flat · Karachi", short:"Karachi", tz:"pk"},
+  shikarpur: {name:"The haveli · Sultan Kot, Shikarpur", short:"Sultan Kot", tz:"pk"},
+  desmoines: {name:"Noor's apartment · Des Moines, Iowa", short:"Des Moines", tz:"us"}
+};
+const US_OFFSET = -11; // PKT (UTC+5) to Central Standard Time (UTC-6)
+
+const ACH = [
+  {id:"grad",   t:"Double Graduate", d:"Noor's BS and MBA. Unlocked from day one."},
+  {id:"hen10",  t:"Chicken Empire", d:"Ariha has 10 chickens."},
+  {id:"subs10k",t:"Silver Play Button soon", d:"Noor reaches 10,000 subscribers."},
+  {id:"dentist",t:"Dr. Umair", d:"Umair's dental studies reach 100%."},
+  {id:"dodson", t:"The Magician", d:"Survive 20 punches in Dodson Dodge."},
+  {id:"goat",   t:"GOAT Debate Settled", d:"Score 5/5 free kicks as Messi would."},
+  {id:"sisters",t:"All Five on the Line", d:"Answer 15 calls in Sisters Hotline."},
+  {id:"horse",  t:"5 Horse Salute", d:"Reach drill level 7 in Parade Ground."},
+  {id:"harvest",t:"Bumper Crop", d:"Earn PKR 500,000 from the lands."},
+  {id:"swim",   t:"Gold in the Pool", d:"Win a swimming race."},
+  {id:"movie",  t:"Family Movie Night", d:"Everyone in Pakistan watches a movie together."},
+  {id:"ufc",    t:"Fight Night Across Oceans", d:"Noor and Umair watch UFC together."},
+  {id:"reunion",t:"Ghar Wapsi", d:"Family bond hits 100. Noor comes home."}
+];
+
+// ===== STATE =====
+function freshState(){
+  const s = {
+    day:1, min:7*60, // minutes since midnight PKT
+    bond:25, pkr:150000, usd:400, subs:2400, ytU:900, study:35, swim:20, eggs:0,
+    chickens:["Kukdi","Sultana","Toofan"], crop:30, totalHarvest:0,
+    sel:"ariha", loc:{noor:"desmoines",tozia:"karachi",mir:"karachi",umair:"karachi",ariha:"karachi"},
+    needs:{}, log:[], ach:{grad:true}, flags:{}, seen:false, ended:false, today:{}
+  };
+  ORDER.forEach(k=>s.needs[k]={energy:80,hunger:70,fun:60,social:55});
+  return s;
+}
+let S = freshState();
+const SAVE_KEY="ghar-family-sim-v1";
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+function load(){ try{ const r=localStorage.getItem(SAVE_KEY); if(r){ const o=JSON.parse(r); if(o&&o.needs&&o.needs.noor){ S=Object.assign(freshState(),o); S.today=S.today||{}; S.flags=S.flags||{}; return true; } } }catch(e){} return false; }
+
+// ===== HELPERS =====
+const $ = id=>document.getElementById(id);
+const clamp=(v,a=0,b=100)=>Math.max(a,Math.min(b,v));
+const rnd=(a,b)=>a+Math.random()*(b-a);
+const pickOne=a=>a[Math.floor(Math.random()*a.length)];
+const pkHour=()=>Math.floor(S.min/60)%24;
+const usMin=()=>((S.min+US_OFFSET*60)%1440+1440)%1440;
+function fmt(m){ m=((m%1440)+1440)%1440; let h=Math.floor(m/60), mm=m%60, ap=h>=12?"PM":"AM"; h=h%12||12; return h+":"+String(mm).padStart(2,"0")+" "+ap; }
+function localMin(who){ return LOCS[S.loc[who]].tz==="us"? usMin() : S.min; }
+function isAwake(who){
+  if(who==="noor"){ const h=Math.floor(usMin()/60); return (h>=7 && h<24) || S.flags.noorUp; }
+  return true; // the Pakistan day runs 7 AM to 11 PM
+}
+function together(a,b){ return S.loc[a]===S.loc[b]; }
+function pkFamilyTogether(){ return ["tozia","mir","umair","ariha"].every(k=>S.loc[k]===S.loc.mir); }
+function fmtPkr(n){ return "Rs "+Math.round(n).toLocaleString("en-US"); }
+function addLog(html){ S.log.unshift("<em>Day "+S.day+" · "+fmt(S.min)+"</em> "+html); S.log=S.log.slice(0,60); }
+function need(who,k,d){ S.needs[who][k]=clamp(S.needs[who][k]+d); }
+function bond(d){ S.bond=clamp(S.bond+d); }
+function unlock(id){
+  if(S.ach[id]) return; S.ach[id]=true; const a=ACH.find(x=>x.id===id);
+  addLog("🏆 Achievement: <b>"+a.t+"</b>"); toast("🏆 "+a.t);
+}
+let toastT=null;
+function toast(msg){ const t=$("toast"); t.innerHTML=msg; t.style.opacity=1; clearTimeout(toastT); toastT=setTimeout(()=>t.style.opacity=0,2600); }
+// ===== SCENE RENDERER =====
+const cv=$("scene"), cx=cv.getContext("2d"), W=1280, H=640;
+const SKIN="#f4d9c4", HAIR="#151018";
+const bubbles={}; // who -> {txt, until}
+function say(who,txt,ms=3500){ bubbles[who]={txt,until:performance.now()+ms}; }
+let hens=[]; function syncHens(){ while(hens.length<S.chickens.length) hens.push({x:rnd(500,1150),y:rnd(540,600),vx:rnd(-.6,.6),p:0,c:pickOne(["#fff6e8","#c96a2b","#e8b04a","#3a2a22"])}); hens.length=S.chickens.length; }
+let flakes=[...Array(70)].map(()=>({x:rnd(0,W),y:rnd(0,H),v:rnd(.4,1.2)}));
+
+function skyFor(m){
+  const h=m/60;
+  if(h<5||h>=20) return ["#0b1030","#1d1747"];
+  if(h<7) return ["#3b3a78","#ff9a6b"];
+  if(h<17) return ["#5aa9ff","#bfe3ff"];
+  if(h<19) return ["#5b3f8f","#ff8a5c"];
+  return ["#1a1650","#4b2b6b"];
+}
+function grad(y0,y1,c0,c1){ const g=cx.createLinearGradient(0,y0,0,y1); g.addColorStop(0,c0); g.addColorStop(1,c1); return g; }
+function rr(x,y,w,h,r,fill){ cx.beginPath(); cx.roundRect(x,y,w,h,r); cx.fillStyle=fill; cx.fill(); }
+function isNight(m){ const h=m/60; return h<6||h>=19; }
+function sunMoon(m,x,y){ cx.fillStyle=isNight(m)?"#f2f0d8":"#ffd75e"; cx.beginPath(); cx.arc(x,y,isNight(m)?20:30,0,7); cx.fill(); }
+
+function drawKarachi(m,t){
+  const [a,b]=skyFor(m);
+  cx.fillStyle="#3a2d55"; cx.fillRect(0,0,W,H); // wall
+  // big window onto Clifton
+  const wx=120,wy=60,ww=700,wh=330;
+  cx.fillStyle=grad(wy,wy+wh,a,b); cx.fillRect(wx,wy,ww,wh);
+  sunMoon(m,wx+560,wy+70);
+  cx.fillStyle=isNight(m)?"#14324f":"#2f86b8"; cx.fillRect(wx,wy+250,ww,80); // Arabian Sea
+  cx.strokeStyle="rgba(255,255,255,.35)"; cx.lineWidth=2;
+  for(let i=0;i<6;i++){ cx.beginPath(); const yy=wy+262+i*11; for(let x=wx;x<wx+ww;x+=20){ cx.lineTo(x,yy+Math.sin(x/30+t/700+i)*3);} cx.stroke(); }
+  const bl=[[0,120,60],[70,170,45],[125,90,70],[205,200,50],[265,140,80],[355,230,55],[420,110,70],[500,180,60],[570,150,90],[650,100,50]];
+  bl.forEach(([x,h,w])=>{ cx.fillStyle=isNight(m)?"#1b1638":"#7c8db0"; cx.fillRect(wx+x,wy+250-h,w,h);
+    if(isNight(m)){ cx.fillStyle="#ffd96a"; for(let yy=wy+260-h;yy<wy+240;yy+=18) for(let xx=wx+x+6;xx<wx+x+w-6;xx+=14) if((xx*yy)%7<4) cx.fillRect(xx,yy,6,8);} });
+  cx.strokeStyle="#f6efe1"; cx.lineWidth=10; cx.strokeRect(wx,wy,ww,wh); cx.beginPath(); cx.moveTo(wx+ww/2,wy); cx.lineTo(wx+ww/2,wy+wh); cx.stroke();
+  // TV
+  rr(900,120,300,180,10,"#0d0a18"); rr(912,132,276,156,6, S.flags.loadshed?"#111":grad(132,288,"#2a1f6b","#e0405f"));
+  cx.fillStyle="#f6efe1"; cx.font="700 18px Nunito"; cx.fillText(S.flags.loadshed?"Load-shedding... no power":"Movie night queue",930,220);
+  cx.fillStyle="#5a4a80"; cx.fillRect(1030,300,40,40);
+  // floor + rug + sofa
+  cx.fillStyle="#6b4a3a"; cx.fillRect(0,470,W,170);
+  rr(260,520,760,100,50,"#b8323f"); cx.strokeStyle="#ffb627"; cx.lineWidth=4; cx.beginPath(); cx.roundRect(280,532,720,76,40); cx.stroke();
+  rr(860,380,380,110,22,"#19806f"); rr(880,350,340,60,18,"#22a08b");
+}
+function drawHaveli(m,t){
+  const [a,b]=skyFor(m);
+  cx.fillStyle=grad(0,380,a,b); cx.fillRect(0,0,W,380); sunMoon(m,1120,80);
+  // fields
+  cx.fillStyle="#c9a43a"; cx.fillRect(0,330,W,70);
+  for(let x=0;x<W;x+=14){ cx.strokeStyle="#e8c45a"; cx.lineWidth=2; cx.beginPath(); cx.moveTo(x,400); cx.lineTo(x+Math.sin(t/500+x)*4,340+(S.crop>60?0:20)); cx.stroke(); }
+  // haveli facade
+  cx.fillStyle="#d9b98c"; cx.fillRect(140,110,760,320);
+  cx.fillStyle="#b88c5a"; cx.fillRect(130,95,780,26); for(let x=140;x<900;x+=38){ cx.fillRect(x,78,22,20); }
+  for(let i=0;i<5;i++){ const x=175+i*145; cx.fillStyle="#3b2a40"; cx.beginPath(); cx.moveTo(x,250); cx.lineTo(x,180); cx.quadraticCurveTo(x+45,120,x+90,180); cx.lineTo(x+90,250); cx.fill();
+    cx.strokeStyle="#7a4b2a"; cx.lineWidth=5; cx.stroke(); if(isNight(m)){ cx.fillStyle="rgba(255,200,90,.7)"; cx.fillRect(x+10,195,70,50);} }
+  rr(450,290,140,140,6,"#6b3d1f"); cx.strokeStyle="#ffb627"; cx.lineWidth=3; for(let i=0;i<4;i++) cx.strokeRect(460+i*8,300+i*8,120-i*16,130-i*16);
+  cx.fillStyle="#3b2a40"; cx.font="800 20px 'Baloo 2'"; cx.fillText("SULTAN KOT",462,282);
+  // neem tree
+  cx.fillStyle="#5a3a22"; cx.fillRect(1010,200,28,240); cx.fillStyle="#2f7a3a"; [[1024,170,90],[970,220,60],[1080,220,60]].forEach(([x,y,r])=>{cx.beginPath();cx.arc(x,y,r,0,7);cx.fill();});
+  // courtyard
+  cx.fillStyle="#b08a66"; cx.fillRect(0,430,W,210); cx.fillStyle="#a07a58"; for(let x=0;x<W;x+=80) for(let y=440;y<H;y+=40) cx.fillRect(x+((y/40)%2)*40,y,78,38);
+  // charpai
+  cx.fillStyle="#7a4b2a"; cx.fillRect(60,480,180,14); cx.fillRect(66,494,8,40); cx.fillRect(226,494,8,40);
+  cx.strokeStyle="#e8d2a6"; cx.lineWidth=2; for(let x=66;x<236;x+=10){cx.beginPath();cx.moveTo(x,480);cx.lineTo(x+6,494);cx.stroke();}
+  // tractor
+  const tx=1120; rr(tx,440,120,50,8,"#c8302e"); rr(tx+60,400,50,45,6,"#c8302e"); cx.fillStyle="#9fd7ff"; cx.fillRect(tx+66,406,36,24);
+  cx.fillStyle="#1a1a1a"; cx.beginPath(); cx.arc(tx+28,500,30,0,7); cx.fill(); cx.beginPath(); cx.arc(tx+100,505,20,0,7); cx.fill();
+  // coop
+  rr(560,470,0,0,0,"#000");
+  cx.fillStyle="#8a5a33"; cx.fillRect(1180,540,90,70); cx.fillStyle="#5a3a22"; cx.beginPath(); cx.moveTo(1170,545); cx.lineTo(1225,505); cx.lineTo(1280,545); cx.fill();
+}
+function drawDesMoines(m,t){
+  const [a,b]=skyFor(m);
+  cx.fillStyle="#2b3550"; cx.fillRect(0,0,W,H);
+  const wx=640,wy=60,ww=560,wh=330;
+  cx.fillStyle=grad(wy,wy+wh,a,b); cx.fillRect(wx,wy,ww,wh); sunMoon(m,wx+90,wy+70);
+  // skyline with the tall tower
+  [[20,110,60],[90,170,50],[150,250,46],[205,140,70],[285,190,55],[350,120,80],[440,160,60],[505,100,55]].forEach(([x,h,w],i)=>{
+    cx.fillStyle=isNight(m)?"#121a2e":"#5f7090"; cx.fillRect(wx+x,wy+wh-h,w,h);
+    if(i===2){ cx.beginPath(); cx.moveTo(wx+x,wy+wh-h); cx.lineTo(wx+x+w/2,wy+wh-h-30); cx.lineTo(wx+x+w,wy+wh-h); cx.fill(); }
+    if(isNight(m)){ cx.fillStyle="#ffe08a"; for(let yy=wy+wh-h+10;yy<wy+wh-10;yy+=16) for(let xx=wx+x+6;xx<wx+x+w-6;xx+=12) if(((xx+yy)>>3)%3) cx.fillRect(xx,yy,5,7);} });
+  cx.fillStyle="#eef3ff"; cx.fillRect(wx,wy+wh-14,ww,14);
+  cx.save(); cx.beginPath(); cx.rect(wx,wy,ww,wh); cx.clip(); cx.fillStyle="#fff";
+  flakes.forEach(f=>{ f.y+=f.v; f.x+=Math.sin(f.y/40)*.4; if(f.y>wy+wh) {f.y=wy; f.x=rnd(wx,wx+ww);} if(f.x>wx&&f.x<wx+ww){cx.beginPath();cx.arc(f.x,f.y,2.2,0,7);cx.fill();} }); cx.restore();
+  cx.strokeStyle="#dfe6f5"; cx.lineWidth=10; cx.strokeRect(wx,wy,ww,wh);
+  // diplomas
+  [["BS CS","WGU · Sep"],["MBA PM","Capella · Oct"]].forEach(([a1,b1],i)=>{ const x=80+i*190; rr(x,70,160,110,4,"#c9a227"); rr(x+8,78,144,94,2,"#fbf6e6");
+    cx.fillStyle="#2b3550"; cx.font="800 22px 'Baloo 2'"; cx.fillText(a1,x+22,120); cx.font="600 14px Nunito"; cx.fillText(b1,x+22,145); });
+  // grad cap on shelf
+  cx.fillStyle="#5a4630"; cx.fillRect(70,230,380,12); cx.fillStyle="#111"; cx.beginPath(); cx.moveTo(150,215); cx.lineTo(200,200); cx.lineTo(250,215); cx.lineTo(200,230); cx.fill(); cx.fillRect(180,215,40,15);
+  cx.strokeStyle="#ffb627"; cx.lineWidth=2; cx.beginPath(); cx.moveTo(200,215); cx.lineTo(240,225); cx.lineTo(240,245); cx.stroke();
+  // floor, desk, ring light, camera
+  cx.fillStyle="#3d2f2a"; cx.fillRect(0,470,W,170);
+  rr(60,380,420,22,6,"#8a6a4a"); cx.fillStyle="#6b5038"; cx.fillRect(80,402,14,90); cx.fillRect(446,402,14,90);
+  rr(150,300,180,82,8,"#111827"); rr(158,308,164,64,4,"#2f6fdc"); cx.fillStyle="#fff"; cx.font="800 14px Nunito"; cx.fillText("Editing vlog...",172,345);
+  cx.strokeStyle="#ddd"; cx.lineWidth=4; cx.beginPath(); cx.moveTo(540,300); cx.lineTo(540,560); cx.stroke();
+  cx.strokeStyle="#fff7d6"; cx.lineWidth=12; cx.beginPath(); cx.arc(540,250,50,0,7); cx.stroke();
+  rr(520,240,40,26,4,"#222"); cx.fillStyle="#555"; cx.beginPath(); cx.arc(540,253,8,0,7); cx.fill();
+  cx.fillStyle="#ff3b3b"; if(Math.floor(t/600)%2) { cx.beginPath(); cx.arc(553,245,3,0,7); cx.fill(); }
+}
+
+function drawPerson(who,x,y,t,asleep){
+  const kid=who==="ariha", s=kid?.8:1, bob=asleep?0:Math.sin(t/400+x)*3;
+  cx.save(); cx.translate(x,y+bob); cx.scale(s,s);
+  cx.fillStyle="rgba(0,0,0,.25)"; cx.beginPath(); cx.ellipse(0,0,40,10,0,0,7); cx.fill();
+  const shirt={noor:"#ffb627",tozia:"#ff4f7b",mir:"#e9e3d0",umair:"#8ccdf5",ariha:"#7bd34a"}[who];
+  cx.fillStyle="#2a2440"; cx.fillRect(-18,-50,14,50); cx.fillRect(4,-50,14,50);
+  rr(-30,-130,60,90,16,shirt);
+  if(who==="umair"){ cx.fillStyle="#fff"; for(let i=-20;i<30;i+=16) cx.fillRect(i,-128,8,86); cx.fillStyle="#1d2b5c"; cx.font="800 30px 'Baloo 2'"; cx.fillText("10",-15,-72); }
+  if(who==="mir"){ cx.fillStyle="#19c3b0"; cx.fillRect(-30,-130,60,10); }
+  if(who==="noor"){ cx.fillStyle="#c98a10"; cx.fillRect(-12,-110,24,16); }
+  // head
+  cx.fillStyle=SKIN; cx.beginPath(); cx.arc(0,-160,30,0,7); cx.fill();
+  cx.fillStyle=HAIR;
+  if(who==="tozia"||who==="ariha"){ cx.beginPath(); cx.arc(0,-168,31,Math.PI,0); cx.fill(); cx.fillRect(-31,-170,10,40); cx.fillRect(21,-170,10,40); }
+  else { cx.beginPath(); cx.arc(0,-170,30,Math.PI*1.05,-.05); cx.fill(); cx.fillRect(-28,-180,56,10); }
+  if(who==="ariha"){ cx.beginPath(); cx.arc(-34,-178,10,0,7); cx.arc(34,-178,10,0,7); cx.fill(); }
+  if(who==="tozia"){ cx.fillStyle="rgba(255,79,123,.85)"; cx.beginPath(); cx.arc(0,-168,36,Math.PI*1.05,-.05); cx.lineTo(42,-110); cx.lineTo(-42,-110); cx.fill(); cx.fillStyle=SKIN; cx.beginPath(); cx.arc(0,-157,24,0,7); cx.fill(); cx.fillStyle=HAIR; cx.beginPath(); cx.arc(0,-168,24,Math.PI,0); cx.fill(); }
+  // face
+  cx.fillStyle="#1a1020";
+  if(asleep){ cx.fillRect(-13,-160,9,2); cx.fillRect(5,-160,9,2); }
+  else { cx.beginPath(); cx.arc(-10,-160,3.5,0,7); cx.arc(10,-160,3.5,0,7); cx.fill(); }
+  if(who==="mir"){ cx.fillStyle=HAIR; cx.beginPath(); cx.ellipse(0,-145,15,5,0,0,7); cx.fill(); }
+  cx.strokeStyle="#8a3a3a"; cx.lineWidth=2.5; cx.beginPath(); cx.arc(0,who==="mir"?-140:-147,7,.2,Math.PI-.2); cx.stroke();
+  cx.restore();
+  // name tag
+  cx.font="800 17px Nunito"; const nm=PEOPLE[who].name; const w=cx.measureText(nm).width+16;
+  rr(x-w/2,y+8,w,24,8,S.sel===who?"#ffb627":"rgba(20,15,36,.8)"); cx.fillStyle=S.sel===who?"#140f24":"#f6efe1"; cx.fillText(nm,x-w/2+8,y+26);
+  if(asleep){ cx.fillStyle="#cfe1ff"; cx.font="800 22px Nunito"; cx.fillText("z z z",x+20,y-200-Math.sin(t/500)*6); }
+  const bb=bubbles[who];
+  if(bb && bb.until>performance.now()){ cx.font="700 16px Nunito"; const tw=Math.min(cx.measureText(bb.txt).width,320)+20, bx=clamp(x-tw/2,8,W-tw-8), by=y-(kid?195:240);
+    rr(bx,by-30,tw,34,12,"#fff7e6"); cx.fillStyle="#140f24"; cx.fillText(bb.txt,bx+10,by-8,300); }
+}
+function drawHen(h,t){
+  h.x+=h.vx; h.p+=.05; if(h.x<420||h.x>1160||Math.random()<.005) h.vx=-h.vx||.5; if(Math.random()<.01) h.vx=rnd(-.8,.8);
+  const peck=Math.sin(h.p*3)>.85?6:0, d=h.vx<0?-1:1;
+  cx.save(); cx.translate(h.x,h.y); cx.scale(d,1);
+  cx.fillStyle=h.c; cx.beginPath(); cx.ellipse(0,-14,18,13,0,0,7); cx.fill(); cx.beginPath(); cx.arc(14,-26+peck,8,0,7); cx.fill();
+  cx.fillStyle="#e33"; cx.beginPath(); cx.arc(14,-35+peck,4,0,7); cx.fill(); cx.fillStyle="#f5a623"; cx.beginPath(); cx.moveTo(21,-27+peck); cx.lineTo(28,-24+peck); cx.lineTo(21,-22+peck); cx.fill();
+  cx.strokeStyle="#f5a623"; cx.lineWidth=2; cx.beginPath(); cx.moveTo(-4,-2); cx.lineTo(-4,4); cx.moveTo(4,-2); cx.lineTo(4,4); cx.stroke();
+  cx.restore();
+}
+function render(t){
+  const who=S.sel, loc=S.loc[who], m=localMin(who);
+  if(loc==="karachi") drawKarachi(m,t); else if(loc==="shikarpur") drawHaveli(m,t); else drawDesMoines(m,t);
+  const here=ORDER.filter(k=>S.loc[k]===loc);
+  const xs=here.length===1?[640]:here.map((_,i)=>260+i*(760/(here.length-1)));
+  here.forEach((k,i)=>drawPerson(k,xs[i],loc==="desmoines"?560:575,t,!isAwake(k)));
+  if(S.loc.ariha===loc && loc!=="desmoines"){ syncHens(); hens.forEach(h=>drawHen(h,t)); }
+  // tint for night
+  if(isNight(m)){ cx.fillStyle="rgba(10,8,40,.22)"; cx.fillRect(0,0,W,H); }
+  requestAnimationFrame(render);
+}
+// ===== ACTIONS =====
+const PK=["tozia","mir","umair","ariha"];
+const here=who=>ORDER.filter(k=>S.loc[k]===S.loc[who]);
+function eff(who,o){ for(const k in o) need(who,k,o[k]); }
+function moodMul(who){ const n=S.needs[who]; const a=(n.energy+n.hunger+n.fun+n.social)/4; return a<25?.5:a<50?.8:1; }
+const DISHES=["chicken karahi","daal chawal","aloo keema","chana pulao","shami kebab"];
+const GOSSIP=["the wedding in the family next month","who wore what at the mehndi","a cousin's rishta","the price of tomatoes","whose son passed his exams","a new recipe that nobody will ever share","Noor's latest vlog (they all watched it)"];
+const CHICK_NAMES=["Bijli","Chotu","Rani","Pakora","Mithu","Badshah","Gulabo","Shehzadi","Tikka","Laddoo","Jalebi","Mango","Biryani (do not tell her)"];
+const GIFTS=["a new phone case for Ariha","perfume for Mom","a Messi jersey for Umair","an Apple TV gift card for Dad","Iowa sweet corn chips for everyone"];
+
+const A = {
+ noor:[
+  {id:"wake",l:"Wake Noor up anyway",d:"It's the middle of the night in Iowa. Costs energy.",h:0,show:()=>!isAwake("noor"),run(){S.flags.noorUp=true; eff("noor",{energy:-20}); say("noor","Uff... who's calling at this hour?"); addLog("Noor stumbled awake in Des Moines at "+fmt(usMin())+".");}},
+  {id:"vlog",l:"Film a vlog",d:"2 hrs · grow the channel",h:2,game:"vlog",reward(sc){const g=Math.round(sc*12*moodMul("noor")); S.subs+=g; eff("noor",{fun:15,energy:-10}); addLog("Noor's new vlog got <b>+"+g+"</b> subscribers."); if(S.subs>=10000) unlock("subs10k");}},
+  {id:"call",l:"Video call home",d:"1 hr · everyone's social goes up",h:1,run(){eff("noor",{social:30,fun:8}); PK.forEach(k=>eff(k,{social:12})); bond(4); say("noor","Assalam o Alaikum everyone!"); say("tozia","Did you eat? You look thin."); addLog("Video call home. Mom asked three times if Noor had eaten.");}},
+  {id:"ufc",l:"UFC watch party with Umair",d:"3 hrs · Dodson Dodge",h:3,game:"dodson",when:()=>isAwake("umair")||"Umair is busy",reward(sc){eff("noor",{fun:30,social:20}); eff("umair",{fun:30,social:20}); bond(6); unlock("ufc"); if(sc>=20) unlock("dodson"); say("umair","DODSON! The Magician!"); addLog("Noor and Umair watched UFC across two continents. Dodson survived <b>"+sc+"</b> punches. The jokes never end.");}},
+  {id:"cook",l:"Cook desi food",d:"1 hr · fills hunger",h:1,run(){const d=pickOne(DISHES); eff("noor",{hunger:45,fun:5}); say("noor","Not like Mom's "+d+", but close."); addLog("Noor cooked "+d+" in Des Moines and sent Mom a photo for approval.");}},
+  {id:"work",l:"Project management gig",d:"4 hrs · earn dollars (that MBA pays)",h:4,run(){const e=Math.round(rnd(160,320)*moodMul("noor")); S.usd+=e; eff("noor",{energy:-18,fun:-5}); addLog("Noor ran a client project meeting. <b>+$"+e+"</b>.");}},
+  {id:"gift",l:"Send gifts home",d:"$120 · big family bond",h:.5,when:()=>S.usd>=120||"Needs $120",run(){S.usd-=120; const g=pickOne(GIFTS); bond(7); PK.forEach(k=>eff(k,{fun:12})); addLog("Noor sent "+g+". The family group chat exploded.");}},
+  {id:"stream",l:"Netflix / HBO Max binge",d:"2 hrs · fun",h:2,run(){eff("noor",{fun:30,energy:-6}); addLog("Noor binged a whole season. Spoilers were sent to Umair.");}},
+  {id:"nap",l:"Sleep a bit",d:"1 hr · energy",h:1,run(){eff("noor",{energy:30}); S.flags.noorUp=false; addLog("Noor took a nap.");}},
+  {id:"flash",l:"Graduation flashback",d:"1 hr · BS and MBA, back to back",h:1,when:()=>!S.today.flash||"Already did today",run(){S.today.flash=1; eff("noor",{fun:20}); bond(2); say("noor","WGU in September, Capella in October. Unbelievable!"); addLog("Noor rewatched the graduation videos. Dad still tells every guest about it.");}},
+  {id:"fly",l:"Fly home to Pakistan",d:"$1,000 · 3-day visit",h:6,show:()=>S.loc.noor==="desmoines"&&S.ach.reunion,when:()=>S.usd>=1000||"Needs $1,000",run(){S.usd-=1000; S.loc.noor=S.loc.mir; S.flags.visit=3; bond(5); addLog("Noor landed in Pakistan for a visit!");}}
+ ],
+ tozia:[
+  {id:"sis",l:"Call my 5 sisters",d:"2 hrs · Sisters Hotline",h:2,game:"sisters",reward(sc){eff("tozia",{social:45,fun:20}); if(sc>=15) unlock("sisters"); addLog("Mom answered <b>"+sc+"</b> calls from her 5 sisters. Topic of the day: "+pickOne(GOSSIP)+".");}},
+  {id:"cook",l:"Cook dinner for everyone",d:"2 hrs · feeds the whole house",h:2,run(){const d=pickOne(DISHES); here("tozia").forEach(k=>eff(k,{hunger:55,fun:6})); bond(3); say("tozia","Khana tayyar hai! Come eat!"); addLog("Mom made "+d+". Everyone came running.");}},
+  {id:"eat",l:"Eat something yourself",d:"30 min · Mom forgets this",h:.5,run(){eff("tozia",{hunger:40}); addLog("Mom finally ate, after feeding everyone else first.");}},
+  {id:"chai",l:"Make chai",d:"30 min · energy for everyone here",h:.5,run(){here("tozia").forEach(k=>eff(k,{energy:14})); say("tozia","Chai is ready."); addLog("Doodh patti for the whole house.");}},
+  {id:"bazaar",l:"Go shopping",d:"2 hrs · Rs 6,000",h:2,when:()=>S.pkr>=6000||"Not enough money",run(){S.pkr-=6000; eff("tozia",{fun:28,social:10}); addLog("Mom went shopping in "+LOCS[S.loc.tozia].short+" and bargained like a champion.");}},
+  {id:"drama",l:"Watch a drama",d:"2 hrs · fun",h:2,when:()=>!S.flags.loadshed||"Power is out",run(){eff("tozia",{fun:30}); addLog("Mom watched three episodes of a drama and had opinions about every character.");}},
+  {id:"noor",l:"Check on Noor",d:"1 hr · call or voice note",h:1,run(){ if(isAwake("noor")&&S.loc.noor==="desmoines"){eff("tozia",{social:20}); eff("noor",{social:20}); bond(3); say("tozia","Beta, wear a jacket, it's cold there!"); addLog("Mom called Noor. Reminded Noor about jackets in Iowa.");} else {eff("tozia",{social:8}); bond(1); addLog("Noor was asleep, so Mom left a 4-minute voice note.");} }}
+ ],
+ mir:[
+  {id:"eat",l:"Lunch with lassi",d:"30 min · food",h:.5,run(){eff("mir",{hunger:40}); addLog("Dad had lunch and a tall glass of lassi.");}},
+  {id:"lands",l:"Inspect the lands",d:"3 hrs · crops grow",h:3,when:()=>S.loc.mir==="shikarpur"||"Only at Sultan Kot",run(){S.crop=clamp(S.crop+16); eff("mir",{energy:-12,fun:8}); addLog("Dad inspected the fields with the farm hands. Crops at <b>"+S.crop+"%</b>.");}},
+  {id:"harvest",l:"Harvest on the tractor",d:"3 hrs · earn rupees",h:3,game:"harvest",when:()=>S.loc.mir!=="shikarpur"?"Only at Sultan Kot":S.crop<60?"Crops need 60%":true,reward(sc){const e=Math.round(sc*2500*(S.crop/100)); S.pkr+=e; S.totalHarvest+=e; S.crop=20; eff("mir",{energy:-15,fun:15}); if(S.totalHarvest>=500000) unlock("harvest"); addLog("Harvest done! <b>+"+fmtPkr(e)+"</b>.");}},
+  {id:"movie",l:"Movie on Apple TV",d:"2 hrs · bigger with the family",h:2,when:()=>!S.flags.loadshed||"Power is out",run(){ const all=pkFamilyTogether(); const ppl=all?PK:["mir"]; ppl.forEach(k=>eff(k,{fun:30})); if(all){bond(6); unlock("movie"); addLog("Family movie night! Dad picked an action movie. Ariha fell asleep halfway.");} else addLog("Dad watched a movie on Apple TV.");}},
+  {id:"drill",l:"5 Horse parade drill",d:"1 hr · Parade Ground",h:1,game:"parade",reward(sc){eff("mir",{fun:20,energy:5}); if(sc>=7) unlock("horse"); say("mir","5 Horse! Steel and fire!"); addLog("Dad ran the old Armored Corps drills. Reached level <b>"+sc+"</b>.");}},
+  {id:"walk",l:"Morning walk",d:"1 hr · before 10 AM",h:1,when:()=>pkHour()<10||"Only in the morning",run(){eff("mir",{energy:12,fun:10}); addLog("Dad's morning walk. "+(S.loc.mir==="karachi"?"Sea breeze in Clifton.":"Past the fields of Sultan Kot."));}},
+  {id:"travel",l:()=>S.loc.mir==="karachi"?"Drive the family to Sultan Kot":"Drive the family to Karachi",d:"7 hrs · Karachi ⇄ Sultan Kot",h:7,when:()=>S.pkr>=8000||"Need Rs 8,000 for petrol",run(){const to=S.loc.mir==="karachi"?"shikarpur":"karachi"; S.pkr-=8000; PK.forEach(k=>{S.loc[k]=to; eff(k,{energy:-15});}); if(S.loc.noor!=="desmoines") S.loc.noor=to; addLog("The family drove to <b>"+LOCS[to].name+"</b>. Ariha's chickens rode in a basket.");}}
+ ],
+ umair:[
+  {id:"study",l:"Study dentistry",d:"3 hrs · steady progress",h:3,run(){S.study=clamp(S.study+7*moodMul("umair")); eff("umair",{energy:-14,fun:-8}); if(S.study>=100) unlock("dentist"); addLog("Umair studied oral anatomy. Progress <b>"+Math.round(S.study)+"%</b>.");}},
+  {id:"tooth",l:"Practice on dental models",d:"1 hr · Tooth Doctor",h:1,game:"tooth",reward(sc){S.study=clamp(S.study+sc*.6); eff("umair",{fun:10,energy:-5}); if(S.study>=100) unlock("dentist"); addLog("Umair fixed <b>"+sc+"</b> cavities on the practice jaw. Progress "+Math.round(S.study)+"%.");}},
+  {id:"ball",l:"Play football",d:"2 hrs · Messi free kicks",h:2,game:"freekick",reward(sc){eff("umair",{fun:30,energy:-12}); if(sc>=5) unlock("goat"); say("umair",sc>=4?"Just like Messi!":"The keeper got lucky."); addLog("Umair scored <b>"+sc+"/5</b> free kicks.");}},
+  {id:"yt",l:"Upload a YouTube video",d:"2 hrs · grow his channel",h:2,run(){const g=Math.round(rnd(40,160)*moodMul("umair")); S.ytU+=g; eff("umair",{fun:12,energy:-8}); addLog("Umair uploaded a new video. <b>+"+g+"</b> subscribers. Noor left the first comment.");}},
+  {id:"debate",l:"Messi vs Ronaldo debate",d:"1 hr · with Dad",h:1,when:()=>together("umair","mir")||"Dad isn't here",run(){eff("umair",{fun:20,social:15}); eff("mir",{fun:15,social:10}); bond(2); say("umair","Messi has 8 Ballon d'Ors, Abbu!"); addLog("The Messi debate restarted at the dinner table. Messi won. Again.");}},
+  {id:"meme",l:"Send Noor a Dodson meme",d:"30 min",h:.5,run(){eff("umair",{fun:10}); eff("noor",{fun:12}); bond(1); addLog("Umair sent Noor a John Dodson meme. Noor replied with five more.");}},
+  {id:"eat",l:"Raid the fridge",d:"30 min · hunger",h:.5,run(){eff("umair",{hunger:30}); addLog("Umair found leftovers. Mom noticed.");}}
+ ],
+ ariha:[
+  {id:"chase",l:"Round up the chickens",d:"1 hr · Chicken Chase",h:1,game:"chicken",reward(sc){eff("ariha",{fun:30,energy:-8}); S.eggs+=Math.floor(sc/3); addLog("Ariha caught <b>"+sc+"</b> runaway chickens.");}},
+  {id:"feed",l:"Feed the chickens",d:"30 min · eggs",h:.5,run(){const e=Math.max(1,Math.round(S.chickens.length*rnd(.3,.9))); S.eggs+=e; eff("ariha",{fun:15}); say("ariha","Good morning "+pickOne(S.chickens)+"!"); addLog("Ariha fed the chickens and found <b>"+e+"</b> egg"+(e>1?"s":"")+".");}},
+  {id:"hatch",l:"Hatch a new chick",d:"Uses 6 eggs",h:.5,when:()=>S.eggs>=6||"Needs 6 eggs",run(){S.eggs-=6; const n=CHICK_NAMES.filter(x=>!S.chickens.includes(x)); const nm=n.length?pickOne(n):"Chick #"+(S.chickens.length+1); S.chickens.push(nm); eff("ariha",{fun:40}); bond(2); addLog("A new chick hatched! Ariha named it <b>"+nm+"</b>."); if(S.chickens.length>=10) unlock("hen10");}},
+  {id:"swim",l:"Swimming class",d:"2 hrs · race the pool",h:2,game:"swim",reward(sc){S.swim=clamp(S.swim+6); eff("ariha",{fun:25,energy:-15,hunger:-10}); if(sc) unlock("swim"); addLog(sc?"Ariha <b>won</b> the swimming race!":"Ariha came second. Coach says she's getting faster.");}},
+  {id:"bike",l:"Ride her bicycle",d:"1 hr · dodge and collect",h:1,game:"bike",reward(sc){eff("ariha",{fun:25,energy:-8}); addLog("Ariha raced her bicycle and collected <b>"+sc+"</b> stars.");}},
+  {id:"school",l:"Go to school",d:"5 hrs · mornings only",h:5,when:()=>(pkHour()<9&&!S.today.school)||"Mornings only, once a day",run(){S.today.school=1; eff("ariha",{social:30,energy:-15}); addLog("Ariha went to school. "+pickOne(["Got a gold star.","Told the whole class about her chickens.","Won the drawing contest."]));}},
+  {id:"snack",l:"Eat a paratha",d:"30 min · food",h:.5,run(){eff("ariha",{hunger:35}); addLog("Ariha ate a paratha and shared crumbs with "+pickOne(S.chickens)+".");}},
+  {id:"hw",l:"Homework with Umair",d:"1 hr",h:1,when:()=>together("ariha","umair")||"Umair isn't here",run(){eff("ariha",{social:15}); eff("umair",{social:10}); bond(3); addLog("Umair helped Ariha with maths. Then explained teeth for 20 minutes.");}}
+ ]
+};
+// ===== TIME, EVENTS, DAYS =====
+function advance(hours){
+  const steps=Math.max(1,Math.round(hours*2));
+  for(let i=0;i<steps;i++){
+    S.min+=30;
+    ORDER.forEach(k=>{
+      const awake=isAwake(k);
+      if(awake){ need(k,"energy",k==="noor"&&S.flags.noorUp?-2.5:-1.2); need(k,"hunger",-1.6); need(k,"fun",-.8); need(k,"social",-.5); }
+      else { need(k,"energy",6); need(k,"hunger",-.4); }
+    });
+    const uh=Math.floor(usMin()/60); if(uh===7) S.flags.noorUp=false;
+  }
+  if(S.min>=23*60) endDay();
+}
+const EVENTS=[
+  {t:"⚡ Load-shedding in Karachi today. No TV until tomorrow.",ok:()=>S.loc.mir==="karachi",run(){S.flags.loadshed=true;}},
+  {t:"🌧️ Rain over Sultan Kot. The fields love it. Crops +15%.",run(){S.crop=clamp(S.crop+15);}},
+  {t:"🥚 A hen laid a double-yolk egg! Ariha is calling it a miracle.",run(){S.eggs+=2; eff("ariha",{fun:20});}},
+  {t:"🐐 A neighbour's goat got into the courtyard and chased Ariha's chickens.",ok:()=>S.loc.ariha==="shikarpur",run(){eff("ariha",{fun:-10});}},
+  {t:"📈 One of Noor's vlogs got picked up by the algorithm. +900 subscribers.",run(){S.subs+=900;}},
+  {t:"❄️ First real snow in Des Moines. Noor sends 40 photos to the family group.",run(){eff("noor",{fun:10}); bond(2);}},
+  {t:"⚽ Messi scored a free kick last night. Umair hasn't stopped talking about it.",run(){eff("umair",{fun:25});}},
+  {t:"🥊 John Dodson is on a fight card this weekend. Noor and Umair are already joking.",run(){eff("noor",{fun:10}); eff("umair",{fun:10});}},
+  {t:"📞 One of Mom's sisters is visiting today. The house smells like halwa.",run(){eff("tozia",{social:35}); PK.forEach(k=>eff(k,{hunger:15}));}},
+  {t:"📝 Umair has a dental test today. Study progress counts.",run(){ if(S.study>=60){ eff("umair",{fun:20}); addLog("Umair aced his test. 90%+ as usual."); } else { eff("umair",{fun:-15}); addLog("Umair's test was hard. More studying needed."); } }},
+  {t:"🥭 Mangoes arrived from the lands. Everybody is happy.",run(){PK.forEach(k=>eff(k,{fun:12,hunger:10}));}},
+  {t:"🌾 The farm hands report the wheat is coming up strong. Crops +10%.",run(){S.crop=clamp(S.crop+10);}},
+  {t:"🏊 Ariha's swim coach says she's the fastest in her group.",run(){S.swim=clamp(S.swim+5); eff("ariha",{fun:15});}},
+  {t:"🎬 A new movie dropped on Apple TV. Dad has already decided it's family movie night.",run(){eff("mir",{fun:15});}},
+  {t:"💸 Noor's client paid a bonus. +$200.",run(){S.usd+=200;}}
+];
+const WD=["Thu","Fri","Sat","Sun","Mon","Tue","Wed"];
+function endDay(){
+  const low=[]; ORDER.forEach(k=>{ const n=S.needs[k]; ["hunger","fun","social"].forEach(x=>{ if(n[x]<15) low.push(PEOPLE[k].name+" ("+x+")"); }); });
+  if(low.length) bond(-low.length);
+  const laid=Math.round(S.chickens.length*rnd(.2,.6)); S.eggs+=laid;
+  S.crop=clamp(S.crop+4); S.subs+=Math.round(S.subs*.01); S.ytU+=Math.round(rnd(5,25));
+  const prevDay=S.day;
+  S.day++; S.min=7*60; S.flags.noorUp=false; S.flags.loadshed=false; S.today={};
+  PK.forEach(k=>{ need(k,"energy",60); need(k,"hunger",-20); });
+  if(S.flags.visit){ S.flags.visit--; if(!S.flags.visit){ S.loc.noor="desmoines"; addLog("Noor flew back to Des Moines. Mom cried at the airport. Everyone did."); } }
+  const pool=EVENTS.filter(e=>!e.ok||e.ok()); const ev=pickOne(pool); ev.run(); addLog(ev.t);
+  const lines=[
+    "<p>The lights go out in Pakistan. In Des Moines it's lunchtime.</p>",
+    "<p>🥚 The hens laid <b>"+laid+"</b> eggs overnight.</p>",
+    low.length?"<p>😟 Someone was neglected: "+low.join(", ")+". Family bond −"+low.length+".</p>":"<p>💛 Nobody was neglected today.</p>",
+    "<p><b>Tomorrow:</b> "+ev.t+"</p>"
+  ];
+  showModal("<h1>Day "+prevDay+" is over</h1>"+lines.join("")+'<div class="row"><button class="btn" id="mOk">Start '+WD[(S.day-1)%7]+', day '+S.day+'</button></div>',()=>{ $("mOk").onclick=()=>{hideModal(); checkReunion();}; });
+  save();
+}
+function checkReunion(){
+  if(S.bond>=100 && !S.ach.reunion){
+    unlock("reunion"); S.loc.noor=S.loc.mir; S.flags.visit=4; S.usd+=0;
+    showModal('<h1>Ghar Wapsi</h1><p>The family bond is full. Noor booked a flight from Des Moines and landed at Karachi airport.</p><p>Mom has been cooking for two days. Dad is pretending he isn\'t emotional. Umair already planned a UFC night on the big TV. Ariha introduced Noor to every chicken by name: '+S.chickens.join(", ")+'.</p><p>Noor stays for 4 days. After that, a "Fly home" option stays open from Des Moines whenever there\'s $1,000 saved.</p><div class="row"><button class="btn" id="mOk">Keep playing</button></div>',()=>{ $("mOk").onclick=hideModal; });
+  }
+}
+
+// ===== DOING THINGS =====
+function labelOf(a){ return typeof a.l==="function"?a.l():a.l; }
+function canDo(who,a){
+  if(a.show && !a.show()) return "hide";
+  if(!isAwake(who) && a.id!=="wake") return PEOPLE[who].name+" is asleep";
+  if(a.id==="wake") return true;
+  if(S.needs[who].energy<8 && a.h>=2) return "Too tired";
+  if(a.when){ const r=a.when(); if(r!==true) return r; }
+  return true;
+}
+function doAction(who,a){
+  if(canDo(who,a)!==true) return;
+  if(a.game){ playGame(a.game,sc=>{ a.reward(sc); advance(a.h); afterAct(); }); return; }
+  a.run(); if(a.h) advance(a.h); afterAct();
+}
+function afterAct(){ checkReunion(); save(); renderAll(); }
+
+// ===== UI =====
+function barColor(v){ return v<25?"var(--rose)":v<55?"var(--saffron)":"var(--leaf)"; }
+function renderFam(){
+  $("fam").innerHTML=ORDER.map(k=>{ const p=PEOPLE[k], n=S.needs[k], avg=Math.round((n.energy+n.hunger+n.fun+n.social)/4);
+    return '<button class="mem'+(S.sel===k?' on':'')+'" data-k="'+k+'"><div class="av" style="background:'+p.color+'">'+p.init+'</div><div style="min-width:0;flex:1"><div class="nm">'+p.name+'</div><div class="sub">'+p.role+'</div><div class="bar"><i style="width:'+avg+'%;background:'+barColor(avg)+'"></i></div></div><div class="where">'+LOCS[S.loc[k]].short+'<br>'+fmt(localMin(k))+(isAwake(k)?'':'<br>asleep')+'</div></button>'; }).join("");
+  document.querySelectorAll(".mem").forEach(b=>b.onclick=()=>{ S.sel=b.dataset.k; renderAll(); });
+}
+function renderWho(){
+  const k=S.sel,p=PEOPLE[k],n=S.needs[k];
+  $("who").innerHTML='<div class="av" style="background:'+p.color+'">'+p.init+'</div><div style="min-width:0"><h2 style="margin:0">'+p.name+', '+p.age+'</h2><p>'+p.bio+'</p></div>';
+  $("needs").innerHTML=[["energy","Energy"],["hunger","Food"],["fun","Fun"],["social","Social"]].map(([x,l])=>'<div>'+l+' · '+Math.round(n[x])+'<div class="bar"><i style="width:'+n[x]+'%;background:'+barColor(n[x])+'"></i></div></div>').join("");
+  const acts=A[k].map((a,i)=>({a,i,c:canDo(k,a)})).filter(o=>o.c!=="hide");
+  $("acts").innerHTML=acts.map(o=>'<button class="act'+(o.a.game?' game':'')+'" data-i="'+o.i+'"'+(o.c!==true?' disabled':'')+'><b>'+labelOf(o.a)+'</b><small>'+(o.c===true?o.a.d:o.c)+'</small></button>').join("");
+  document.querySelectorAll(".act").forEach(b=>b.onclick=()=>doAction(k,A[k][+b.dataset.i]));
+  $("locTag").textContent=LOCS[S.loc[k]].name+" · "+fmt(localMin(k));
+}
+function renderStats(){
+  const st=[[fmtPkr(S.pkr),"Family rupees"],["$"+S.usd.toLocaleString(),"Noor's dollars"],[S.subs.toLocaleString(),"Noor's subscribers"],[S.ytU.toLocaleString(),"Umair's subscribers"],[Math.round(S.study)+"%","Dentistry progress"],[S.crop+"%","Crops at Sultan Kot"],[S.chickens.length+" 🐔","Ariha's chickens"],[S.eggs+" 🥚","Eggs"]];
+  $("stats").innerHTML=st.map(([b,s])=>'<div class="stat"><b>'+b+'</b><span>'+s+'</span></div>').join("");
+  $("bondBar").style.width=S.bond+"%";
+  $("log").innerHTML=S.log.map(l=>"<p>"+l+"</p>").join("")||"<p>The diary is empty. Pick someone and do something.</p>";
+  $("cDay").textContent=WD[(S.day-1)%7]+" · "+S.day; $("cPk").textContent=fmt(S.min); $("cUs").textContent=fmt(usMin());
+}
+function renderAll(){ renderFam(); renderWho(); renderStats(); }
+let modalCb=null;
+function showModal(html,after){ $("box").innerHTML=html; $("modal").hidden=false; if(after) after(); }
+function hideModal(){ $("modal").hidden=true; $("box").innerHTML=""; if(stopGame) stopGame(); renderAll(); }
+function menu(){
+  showModal('<h1>Menu</h1><div class="lbl">Achievements · '+ACH.filter(a=>S.ach[a.id]).length+'/'+ACH.length+'</div><div class="ach">'+ACH.map(a=>'<div class="'+(S.ach[a.id]?'':'lock')+'"><b>'+(S.ach[a.id]?'🏆 ':'🔒 ')+a.t+'</b> · '+a.d+'</div>').join("")+'</div>'+
+  '<div class="lbl" style="margin-top:14px">How to play</div><p>Pick a family member on the left and choose what they do. Every action moves the clock. Pakistan is 11 hours ahead of Des Moines, so Noor is asleep from about 11 AM to 6 PM Pakistan time. Keep everyone fed, rested and happy, do things together, and fill the family bond to bring Noor home. Teal cards are minigames.</p>'+
+  '<div class="row"><button class="btn" id="mOk">Back to the game</button><button class="btn alt" id="mEnd">End the day now</button><button class="btn alt" id="mReset">New game</button></div>',()=>{
+    $("mOk").onclick=hideModal; $("mEnd").onclick=()=>{ hideModal(); endDay(); };
+    $("mReset").onclick=()=>{ const b=$("mReset"); if(b.dataset.c){ S=freshState(); hens=[]; save(); hideModal(); intro(); } else { b.dataset.c=1; b.textContent="Tap again to erase the save"; } };
+  });
+}
+function intro(){
+  showModal('<h1>Ghar</h1><p>One family, two countries, eleven hours apart.</p><p><b>Tozia</b> and <b>Mir</b>, with <b>Umair</b> and <b>Ariha</b>, split their time between the Clifton Block 2 flat in Karachi and the family haveli in Sultan Kot, Shikarpur. <b>Noor</b> is in Des Moines, Iowa, vlogging, working, and missing Mom\'s cooking.</p><p>Play as anyone. Keep the family happy, line up calls across time zones, and fill the family bond to bring Noor home.</p><div class="lbl" style="margin-top:10px">Who goes first?</div><div class="pick">'+ORDER.map(k=>'<button data-k="'+k+'"><b style="color:'+PEOPLE[k].color+'">'+PEOPLE[k].name+'</b><br><small>'+PEOPLE[k].role+'</small></button>').join("")+'</div>',()=>{
+    document.querySelectorAll(".pick button").forEach(b=>b.onclick=()=>{ S.sel=b.dataset.k; S.seen=true; if(!S.log.length) addLog("A new day begins. The family group chat is already active."); save(); hideModal(); });
+  });
+}
+// ===== MINIGAME ENGINE =====
+let stopGame=null;
+function playGame(key,done){
+  const G=GAMES[key];
+  showModal('<div class="mg"><h1>'+G.title+'</h1><p>'+G.how+'</p><div class="mghud"><span id="gL">Ready?</span><span id="gR"></span></div><canvas id="gc" width="800" height="600"></canvas><div class="row" id="gRow"><button class="btn" id="gStart">Start</button><button class="btn alt" id="gSkip">Skip the game</button></div></div>',()=>{
+    const c=$("gc"), g=c.getContext("2d");
+    const api={g,W:800,H:600,taps:[],keys:[],ptr:{x:400,y:300},over:false};
+    api.hud=(l,r)=>{ $("gL").textContent=l; $("gR").textContent=r||""; };
+    const pos=e=>{ const r=c.getBoundingClientRect(); return {x:(e.clientX-r.left)*800/r.width,y:(e.clientY-r.top)*600/r.height}; };
+    c.onpointerdown=e=>{ e.preventDefault(); const p=pos(e); api.ptr=p; api.taps.push(p); };
+    c.onpointermove=e=>{ api.ptr=pos(e); };
+    const kd=e=>{ const m={ArrowLeft:"L",ArrowRight:"R",ArrowUp:"U",ArrowDown:"D"," ":"S",a:"L",d:"R"}[e.key]; if(m){ api.keys.push(m); e.preventDefault(); } };
+    let raf=0,last=0;
+    stopGame=()=>{ cancelAnimationFrame(raf); removeEventListener("keydown",kd); stopGame=null; };
+    api.end=(score,msg)=>{ if(api.over) return; api.over=true; stopGame();
+      $("gRow").innerHTML='<div style="flex:1"><b style="font-family:var(--display);font-size:22px">'+msg+'</b></div><button class="btn" id="gDone">Collect</button>';
+      $("gDone").onclick=()=>{ hideModal(); done(score); }; };
+    $("gSkip").onclick=()=>{ hideModal(); done(G.skip); };
+    $("gStart").onclick=()=>{ $("gRow").innerHTML='<button class="btn alt" id="gQuit">Quit</button>'; $("gQuit").onclick=()=>{ hideModal(); done(G.skip); };
+      addEventListener("keydown",kd); const frame=G.run(api); api.t=0;
+      const loop=ts=>{ const dt=last?Math.min(.05,(ts-last)/1000):0; last=ts; api.t+=dt; frame(dt); api.taps.length=0; api.keys.length=0; if(!api.over) raf=requestAnimationFrame(loop); };
+      raf=requestAnimationFrame(loop); };
+    // preview frame
+    g.fillStyle="#2a2148"; g.fillRect(0,0,800,600); g.fillStyle="#f6efe1"; g.font="800 40px 'Baloo 2'"; g.textAlign="center"; g.fillText(G.title,400,290); g.font="600 20px Nunito"; g.fillText("Tap Start",400,330); g.textAlign="left";
+  });
+}
+function txt(g,s,x,y,size=24,col="#f6efe1",al="left"){ g.fillStyle=col; g.font="800 "+size+"px 'Baloo 2',sans-serif"; g.textAlign=al; g.fillText(s,x,y); g.textAlign="left"; }
+function hen(g,x,y,s,col,flip){ g.save(); g.translate(x,y); g.scale(flip?-s:s,s); g.fillStyle=col; g.beginPath(); g.ellipse(0,0,22,16,0,0,7); g.fill(); g.beginPath(); g.arc(17,-14,10,0,7); g.fill(); g.fillStyle="#e33"; g.beginPath(); g.arc(17,-25,5,0,7); g.fill(); g.fillStyle="#f5a623"; g.beginPath(); g.moveTo(26,-15); g.lineTo(34,-12); g.lineTo(26,-9); g.fill(); g.fillStyle="#111"; g.beginPath(); g.arc(20,-16,2,0,7); g.fill(); g.restore(); }
+
+const GAMES={
+ chicken:{title:"Chicken Chase",how:"The chickens escaped the coop! Tap them to catch them before time runs out.",skip:4,run(api){
+   const g=api.g; let left=30,score=0; const cols=["#fff6e8","#c96a2b","#e8b04a","#3a2a22"];
+   const hs=[...Array(5)].map(()=>({x:rnd(80,720),y:rnd(150,540),vx:rnd(-150,150),vy:rnd(-150,150),c:pickOne(cols),pop:0}));
+   return dt=>{ left-=dt; const sp=1+(30-left)/25;
+     g.fillStyle="#b08a66"; g.fillRect(0,0,800,600); g.fillStyle="#a07a58"; for(let y=0;y<600;y+=50) for(let x=0;x<800;x+=100) g.fillRect(x+((y/50)%2)*50,y,96,46);
+     g.fillStyle="#7a4b2a"; g.fillRect(0,0,800,90); txt(g,"Ariha's yard",20,55,30);
+     hs.forEach(h=>{ h.x+=h.vx*dt*sp; h.y+=h.vy*dt*sp; if(h.x<40||h.x>760) h.vx*=-1; if(h.y<130||h.y>570) h.vy*=-1; if(Math.random()<.02){h.vx=rnd(-180,180);h.vy=rnd(-180,180);}
+       h.x=clamp(h.x,40,760); h.y=clamp(h.y,130,570); hen(g,h.x,h.y,1.4,h.c,h.vx<0); if(h.pop>0){ h.pop-=dt; txt(g,"+1",h.x,h.y-50,26,"#ffb627","center"); } });
+     api.taps.forEach(p=>{ hs.forEach(h=>{ if(Math.hypot(p.x-h.x,p.y-h.y)<48){ score++; h.x=rnd(80,720); h.y=rnd(150,540); h.pop=.5; } }); });
+     api.hud("Caught: "+score,Math.ceil(left)+"s");
+     if(left<=0) api.end(score,score+" chickens back in the coop!"); };
+ }},
+ sisters:{title:"Sisters Hotline",how:"Mom's 5 sisters keep calling. Tap the phone that's ringing before it stops. Three missed calls and the gossip goes cold.",skip:5,run(api){
+   const g=api.g, names=["Eldest","2nd","3rd","4th","Youngest"]; let ring=-1,timer=1,win=1.5,score=0,miss=0,flash=0;
+   return dt=>{ timer-=dt; flash=Math.max(0,flash-dt);
+     if(timer<=0){ if(ring>=0){ miss++; flash=.4; } ring=Math.floor(Math.random()*5); win=Math.max(.6,1.5-score*.05); timer=win; }
+     g.fillStyle=flash?"#4a1830":"#2a2148"; g.fillRect(0,0,800,600); txt(g,"Mom's sofa, phones everywhere",400,60,28,"#f6efe1","center");
+     names.forEach((n,i)=>{ const x=80+i*160, y=300, on=i===ring, sh=on?Math.sin(api.t*60)*5:0;
+       rr2(g,x-60+sh,y-90,120,180,18,on?"#ff4f7b":"#3d3166"); rr2(g,x-48+sh,y-75,96,120,10,on?"#ffe0ea":"#1f1836");
+       txt(g,on?"RING!":"...",x+sh,y-10,on?26:22,on?"#a0153e":"#b9add6","center"); txt(g,n,x,y+130,20,"#f6efe1","center");
+       if(on){ g.strokeStyle="#ffb627"; g.lineWidth=6; g.beginPath(); g.arc(x,y-120,10+((api.t*80)%30),0,7); g.stroke(); } });
+     api.taps.forEach(p=>{ const i=Math.floor((p.x)/160); if(p.y>180&&p.y<440&&i>=0&&i<5){ if(i===ring){ score++; ring=-1; timer=rnd(.3,.8); } else { miss++; flash=.4; } } });
+     api.hud("Calls answered: "+score,"Missed: "+miss+"/3");
+     if(miss>=3) api.end(score,score+" calls answered. Mom is fully updated."); };
+ }},
+ harvest:{title:"Tractor Harvest",how:"Drive the tractor through the Sultan Kot fields. Collect wheat bundles, avoid buffaloes. Tap left or right side, or use arrow keys.",skip:12,run(api){ return lane(api,{bg:"#c9a43a",stripe:"#b8902c",good:"wheat",bad:"buffalo",player:"tractor",secs:30,label:"Wheat"}); }},
+ bike:{title:"Bicycle Dash",how:"Ariha races her bicycle down the lane. Grab stars, dodge the potholes. Tap left or right side, or use arrow keys.",skip:8,run(api){ return lane(api,{bg:"#5a5a6a",stripe:"#f6efe1",good:"star",bad:"hole",player:"bike",secs:25,label:"Stars"}); }},
+ parade:{title:"5 Horse Parade Ground",how:"Watch the drill sequence, then repeat it. Each level adds one more command. Steel and fire!",skip:3,run(api){
+   const g=api.g, cmds=[["LEFT TURN","#19c3b0"],["RIGHT TURN","#ffb627"],["SALUTE","#ff4f7b"],["MARCH","#7bd34a"]];
+   let seq=[Math.floor(Math.random()*4)], phase="show", idx=0, t=0, lit=-1, level=0, msg="Watch...";
+   const box=i=>({x:i%2?420:60,y:i<2?120:360,w:320,h:200});
+   return dt=>{ t+=dt;
+     if(phase==="show"){ const k=Math.floor(t/.7); lit=(t%.7<.5&&k<seq.length)?seq[k]:-1; if(k>=seq.length){ phase="input"; idx=0; lit=-1; msg="Your turn, Major!"; } }
+     g.fillStyle="#3b5a2a"; g.fillRect(0,0,800,600); txt(g,msg,400,70,32,"#f6efe1","center");
+     cmds.forEach(([n,c],i)=>{ const b=box(i); rr2(g,b.x,b.y,b.w,b.h,20,lit===i?c:"#24361a"); g.strokeStyle=c; g.lineWidth=5; g.strokeRect(b.x+6,b.y+6,b.w-12,b.h-12); txt(g,n,b.x+b.w/2,b.y+b.h/2+12,34,lit===i?"#140f24":c,"center"); });
+     if(phase==="input"){ const keyMap={L:0,R:1,U:2,D:3}; const hits=api.taps.map(p=>[0,1,2,3].find(i=>{const b=box(i);return p.x>b.x&&p.x<b.x+b.w&&p.y>b.y&&p.y<b.y+b.h;})).concat(api.keys.map(k=>keyMap[k]));
+       hits.forEach(h=>{ if(h===undefined||phase!=="input") return; lit=h; setTimeout(()=>{ if(lit===h) lit=-1; },180);
+         if(h===seq[idx]){ idx++; if(idx===seq.length){ level++; seq.push(Math.floor(Math.random()*4)); phase="wait"; msg="Level "+level+" cleared!"; t=0; } }
+         else { phase="done"; api.end(level,"Drill level "+level+". "+(level>=7?"Fit for 5 Horse!":"Again tomorrow, at dawn.")); } }); }
+     if(phase==="wait"&&t>.9){ phase="show"; t=0; msg="Watch..."; }
+     api.hud("Level: "+level,"Arrows: ← → ↑ ↓"); };
+ }},
+ freekick:{title:"Messi Free Kicks",how:"The aim slides across the goal. Tap to shoot. Beat the keeper 5 times, like Messi.",skip:2,run(api){
+   const g=api.g; let shot=0,goals=0,aim=0,dir=1,kx=400,kd=1,ball=null,res="",rt=0;
+   return dt=>{ if(!ball){ aim+=dir*dt*(1.1+shot*.15); if(aim>1||aim<0){ dir*=-1; aim=clamp(aim,0,1);} }
+     kx+=kd*dt*(170+shot*25); if(kx>560||kx<240) kd*=-1;
+     g.fillStyle="#2f8a3a"; g.fillRect(0,0,800,600); for(let i=0;i<8;i++){ g.fillStyle=i%2?"#2f8a3a":"#349a40"; g.fillRect(0,250+i*45,800,45); }
+     g.fillStyle="#1d2b5c"; g.fillRect(0,0,800,100); txt(g,"Umair · #10",20,60,30,"#8ccdf5");
+     g.strokeStyle="#fff"; g.lineWidth=8; g.strokeRect(180,130,440,190); g.strokeStyle="rgba(255,255,255,.25)"; g.lineWidth=1; for(let x=190;x<620;x+=20){g.beginPath();g.moveTo(x,134);g.lineTo(x,320);g.stroke();}
+     g.fillStyle="#ffb627"; g.fillRect(kx-35,210,70,110); g.fillStyle=SKIN; g.beginPath(); g.arc(kx,195,20,0,7); g.fill();
+     // wall of defenders
+     for(let i=0;i<4;i++){ g.fillStyle="#c8302e"; g.fillRect(300+i*45,380,36,80); g.fillStyle=SKIN; g.beginPath(); g.arc(318+i*45,368,14,0,7); g.fill(); }
+     const ax=140+aim*520; if(!ball){ g.strokeStyle="#ffb627"; g.lineWidth=4; g.beginPath(); g.arc(ax,170,22,0,7); g.stroke(); g.beginPath(); g.moveTo(ax-30,170); g.lineTo(ax+30,170); g.moveTo(ax,140); g.lineTo(ax,200); g.stroke(); }
+     if(!ball && (api.taps.length||api.keys.includes("S"))){ ball={x:400,y:540,tx:ax,ty:170,p:0}; }
+     if(ball){ ball.p+=dt*1.6; const p=Math.min(1,ball.p); const bx=ball.x+(ball.tx-ball.x)*p, by=ball.y+(ball.ty-ball.y)*p-Math.sin(p*Math.PI)*120+Math.sin(p*Math.PI)*(ball.tx>400?-40:40);
+       g.fillStyle="#fff"; g.beginPath(); g.arc(bx,by,14-p*5,0,7); g.fill();
+       if(p>=1){ shot++; const inGoal=ball.tx>190&&ball.tx<610, saved=Math.abs(ball.tx-kx)<55; if(inGoal&&!saved){ goals++; res="GOOOAL!"; } else res=inGoal?"Saved!":"Wide!"; rt=1; ball=null; } }
+     else { g.fillStyle="#fff"; g.beginPath(); g.arc(400,540,14,0,7); g.fill(); }
+     if(rt>0){ rt-=dt; txt(g,res,400,300,64,res==="GOOOAL!"?"#ffb627":"#fff","center"); }
+     api.hud("Goals: "+goals+"/"+shot,"Shot "+Math.min(shot+1,5)+" of 5");
+     if(shot>=5&&rt<=0) api.end(goals,goals+"/5. "+(goals>=4?"Messi would be proud.":"Even Messi misses sometimes.")); };
+ }},
+ tooth:{title:"Tooth Doctor",how:"Cavities keep appearing on the practice jaw. Tap a tooth with a cavity to fill it. Future Dr. Umair at work.",skip:8,run(api){
+   const g=api.g; let left=25,score=0; const teeth=[...Array(14)].map((_,i)=>({x:115+(i%7)*95,y:i<7?210:400,cav:0}));
+   return dt=>{ left-=dt; if(Math.random()<dt*(1.4+(25-left)*.08)){ const free=teeth.filter(t=>!t.cav); if(free.length) pickOne(free).cav=.01; }
+     g.fillStyle="#fde4e8"; g.fillRect(0,0,800,600); txt(g,"Dental practice lab",400,60,30,"#7a2040","center");
+     g.fillStyle="#e2788f"; g.beginPath(); g.roundRect(60,130,680,170,60); g.fill(); g.beginPath(); g.roundRect(60,330,680,170,60); g.fill();
+     teeth.forEach(t=>{ if(t.cav) t.cav+=dt; g.fillStyle="#fffdf4"; g.beginPath(); g.roundRect(t.x-38,t.y-55,76,110,22); g.fill(); g.strokeStyle="#e6dcc0"; g.lineWidth=3; g.stroke();
+       if(t.cav){ const r=Math.min(26,8+t.cav*8); g.fillStyle=t.cav>3?"#3a2a1a":"#6b5030"; g.beginPath(); g.arc(t.x,t.y,r,0,7); g.fill(); } });
+     api.taps.forEach(p=>teeth.forEach(t=>{ if(t.cav&&Math.abs(p.x-t.x)<42&&Math.abs(p.y-t.y)<60){ t.cav=0; score++; } }));
+     const bad=teeth.filter(t=>t.cav>4).length;
+     api.hud("Filled: "+score,Math.ceil(left)+"s"+(bad?" · "+bad+" getting worse":""));
+     if(left<=0) api.end(score,score+" cavities filled. Patients are smiling."); };
+ }},
+ swim:{title:"Swimming Race",how:"Alternate left and right strokes (tap left side then right side, or ← →). Same side twice does nothing. Beat the other swimmer to the wall!",skip:0,run(api){
+   const g=api.g; let me=0,rv=0,lastS="",go=-1.5,done=false; const rs=10.5-S.swim*.04;
+   return dt=>{ go+=dt;
+     const strokes=api.taps.map(p=>p.x<400?"L":"R").concat(api.keys.filter(k=>k==="L"||k==="R"));
+     if(go>0&&!done){ strokes.forEach(s=>{ if(s!==lastS){ me+=1.6+S.swim*.012; lastS=s; } }); rv+=dt*rs; }
+     g.fillStyle="#1a7fb8"; g.fillRect(0,0,800,600); for(let i=0;i<6;i++){ g.fillStyle="rgba(255,255,255,.08)"; g.fillRect(0,i*100+Math.sin(api.t*2+i)*6,800,40); }
+     g.fillStyle="#f6efe1"; for(let y=200;y<=400;y+=200) for(let x=0;x<800;x+=30) g.fillRect(x,y-3,18,6);
+     g.fillStyle="#ffb627"; g.fillRect(740,100,16,400); txt(g,"WALL",748,90,20,"#fff","center");
+     const px=60+Math.min(100,me)*6.8, rx=60+Math.min(100,rv)*6.8;
+     [[px,300,"#7bd34a","Ariha"],[rx,480,"#ff4f7b","Rival"]].forEach(([x,y,c,n])=>{ g.fillStyle=c; g.beginPath(); g.ellipse(x,y,40,14,0,0,7); g.fill(); g.fillStyle=SKIN; g.beginPath(); g.arc(x+44,y-4,14,0,7); g.fill(); g.fillStyle=HAIR; g.beginPath(); g.arc(x+44,y-8,14,Math.PI,0); g.fill(); txt(g,n,x,y-28,20,"#fff","center"); });
+     if(go<0) txt(g,"Ready... "+Math.ceil(-go),400,150,48,"#fff","center"); else if(go<.6) txt(g,"GO!",400,150,60,"#ffb627","center");
+     api.hud("Ariha: "+Math.min(100,Math.round(me))+"m","Rival: "+Math.min(100,Math.round(rv))+"m");
+     if(!done&&(me>=100||rv>=100)){ done=true; const win=me>=100&&me>=rv; api.end(win?1:0,win?"Ariha wins! Gold medal!":"So close. Next class, for sure."); } };
+ }},
+ vlog:{title:"Vlog Shoot",how:"Keep the subject inside your camera frame. Drag or move to follow it. The longer it stays in frame, the better the video.",skip:30,run(api){
+   const g=api.g; let left=20,inT=0,tot=0; const s={x:400,y:300,vx:120,vy:80}; const subj=pickOne(["Des Moines pigeon","snowflake","street taco","squirrel"]); let fx=400,fy=300;
+   return dt=>{ left-=dt; tot+=dt; s.x+=s.vx*dt; s.y+=s.vy*dt; if(s.x<60||s.x>740) s.vx*=-1; if(s.y<80||s.y>540) s.vy*=-1; if(Math.random()<.02){ s.vx=rnd(-260,260); s.vy=rnd(-200,200); }
+     fx+=(api.ptr.x-fx)*Math.min(1,dt*10); fy+=(api.ptr.y-fy)*Math.min(1,dt*10);
+     g.fillStyle="#9fb6d8"; g.fillRect(0,0,800,600); g.fillStyle="#eef3ff"; g.fillRect(0,470,800,130); for(let i=0;i<8;i++){ g.fillStyle="#5f7090"; g.fillRect(i*105,300-(i%3)*60,80,170+(i%3)*60); }
+     g.fillStyle="#ffb627"; g.beginPath(); g.arc(s.x,s.y,24,0,7); g.fill(); txt(g,subj,s.x,s.y-34,18,"#140f24","center");
+     const inside=Math.abs(s.x-fx)<110&&Math.abs(s.y-fy)<80; if(inside) inT+=dt;
+     g.strokeStyle=inside?"#7bd34a":"#ff4f7b"; g.lineWidth=4; g.strokeRect(fx-110,fy-80,220,160); g.fillStyle="#ff3b3b"; g.beginPath(); g.arc(fx-90,fy-60,7,0,7); g.fill(); txt(g,"REC",fx-78,fy-53,16,"#ff3b3b");
+     const pct=Math.round(inT/Math.max(tot,.01)*100); api.hud("In frame: "+pct+"%",Math.ceil(left)+"s");
+     if(left<=0) api.end(pct,pct+"% in frame. "+(pct>70?"This one's going viral.":"Good enough for the edit.")); };
+ }},
+ dodson:{title:"Dodson Dodge",how:"Fight night with Umair! A glove flashes on one side. Dodge AWAY: tap the opposite side (or the opposite arrow). Three hits and it's over. Be The Magician.",skip:6,run(api){
+   const g=api.g; let dodges=0,hits=0,side=0,wait=1,warn=0,lean=0,flash=0,res="";
+   return dt=>{ flash=Math.max(0,flash-dt);
+     if(!side){ wait-=dt; if(wait<=0){ side=Math.random()<.5?-1:1; warn=Math.max(.38,.9-dodges*.025); } }
+     else { warn-=dt; const inp=api.taps.map(p=>p.x<400?-1:1).concat(api.keys.filter(k=>k==="L"||k==="R").map(k=>k==="L"?-1:1));
+       if(inp.length){ lean=inp[0]; if(inp[0]===-side){ dodges++; res="Slipped it!"; } else { hits++; flash=.35; res="Ouch!"; } side=0; wait=rnd(.3,.9); }
+       else if(warn<=0){ hits++; flash=.35; res="Too slow!"; side=0; wait=rnd(.4,.9); } }
+     lean*=.9;
+     g.fillStyle=flash?"#7a1020":"#151020"; g.fillRect(0,0,800,600); g.fillStyle="#2a2a3a"; g.beginPath(); g.moveTo(0,600); g.lineTo(120,380); g.lineTo(680,380); g.lineTo(800,600); g.fill();
+     g.strokeStyle="#ff4f7b"; g.lineWidth=6; [380,330,280].forEach(y=>{ g.beginPath(); g.moveTo(80,y+60); g.lineTo(720,y+60); g.stroke(); });
+     const fx=400+lean*90; g.fillStyle="#2b2b2b"; g.fillRect(fx-34,330,68,110); g.fillStyle=SKIN; g.beginPath(); g.arc(fx,300,32,0,7); g.fill(); g.fillStyle=HAIR; g.beginPath(); g.arc(fx,290,32,Math.PI,0); g.fill(); g.fillStyle="#ffb627"; g.fillRect(fx-36,420,72,26);
+     txt(g,"Small but magic",fx,480,18,"#ffb627","center");
+     if(side){ const gx=side<0?120:680; g.fillStyle="#c8102e"; g.beginPath(); g.arc(gx,300,60+Math.sin(api.t*40)*6,0,7); g.fill(); txt(g,"!",gx,322,64,"#fff","center"); }
+     txt(g,"FIGHT NIGHT · watched from Karachi and Des Moines",400,60,22,"#f6efe1","center"); if(res) txt(g,res,400,170,40,res==="Slipped it!"?"#7bd34a":"#ff4f7b","center");
+     api.hud("Dodges: "+dodges,"Hits: "+hits+"/3");
+     if(hits>=3) api.end(dodges,dodges+" punches dodged. Umair: 'Dodson would never.'"); };
+ }}
+};
+function rr2(g,x,y,w,h,r,c){ g.fillStyle=c; g.beginPath(); g.roundRect(x,y,w,h,r); g.fill(); }
+function lane(api,o){
+  const g=api.g; let left=o.secs,score=0,ln=1,px=400,items=[],spawn=0,flash=0,off=0; const LX=[220,400,580];
+  return dt=>{ left-=dt; spawn-=dt; off=(off+dt*(300+(o.secs-left)*8))%80; flash=Math.max(0,flash-dt);
+    api.taps.forEach(p=>{ ln=clamp(ln+(p.x<400?-1:1),0,2); }); api.keys.forEach(k=>{ if(k==="L") ln=Math.max(0,ln-1); if(k==="R") ln=Math.min(2,ln+1); });
+    px+=(LX[ln]-px)*Math.min(1,dt*14);
+    if(spawn<=0){ spawn=rnd(.35,.7); items.push({l:Math.floor(Math.random()*3),y:-40,good:Math.random()<.62}); }
+    g.fillStyle=flash?"#7a2a2a":o.bg; g.fillRect(0,0,800,600); g.fillStyle="#2f7a3a"; g.fillRect(0,0,120,600); g.fillRect(680,0,120,600);
+    g.fillStyle=o.stripe; for(let y=-80+off;y<600;y+=80){ g.fillRect(308,y,6,40); g.fillRect(488,y,6,40); }
+    const sp=300+(o.secs-left)*8;
+    items.forEach(it=>{ it.y+=sp*dt; const x=LX[it.l];
+      if(it.good){ if(o.good==="wheat"){ g.fillStyle="#f2d16b"; for(let i=-2;i<=2;i++){ g.fillRect(x+i*7-2,it.y-30,4,50);} g.fillStyle="#a0702a"; g.fillRect(x-18,it.y,36,6); } else { g.fillStyle="#ffd84a"; g.beginPath(); for(let i=0;i<10;i++){ const a=i*Math.PI/5-Math.PI/2, r=i%2?12:28; g.lineTo(x+Math.cos(a)*r,it.y+Math.sin(a)*r); } g.fill(); } }
+      else { if(o.bad==="buffalo"){ g.fillStyle="#2a2228"; g.beginPath(); g.ellipse(x,it.y,46,30,0,0,7); g.fill(); g.beginPath(); g.arc(x,it.y-34,18,0,7); g.fill(); g.strokeStyle="#ddd"; g.lineWidth=5; g.beginPath(); g.arc(x,it.y-40,24,Math.PI*1.1,Math.PI*1.9); g.stroke(); }
+        else { g.fillStyle="#26232e"; g.beginPath(); g.ellipse(x,it.y,44,20,0,0,7); g.fill(); } }
+      if(!it.hit && it.y>470&&it.y<540&&it.l===ln){ it.hit=1; if(it.good) score++; else { score=Math.max(0,score-2); flash=.3; } } });
+    items=items.filter(it=>it.y<660&&!(it.hit&&it.good));
+    if(o.player==="tractor"){ rr2(g,px-40,470,80,90,10,"#c8302e"); rr2(g,px-28,480,56,32,6,"#9fd7ff"); g.fillStyle="#111"; g.fillRect(px-54,520,16,44); g.fillRect(px+38,520,16,44); }
+    else { g.strokeStyle="#7bd34a"; g.lineWidth=6; g.beginPath(); g.moveTo(px,470); g.lineTo(px,560); g.stroke(); g.fillStyle="#111"; g.fillRect(px-5,450,10,24); g.fillRect(px-5,550,10,24); g.fillStyle=SKIN; g.beginPath(); g.arc(px,505,14,0,7); g.fill(); g.fillStyle=HAIR; g.beginPath(); g.arc(px,500,14,Math.PI,0); g.fill(); }
+    api.hud(o.label+": "+score,Math.ceil(left)+"s");
+    if(left<=0) api.end(score,score+" "+o.label.toLowerCase()+" collected!"); };
+}
+
+// ===== BOOT =====
+$("btnMenu").onclick=menu;
+const had=load(); syncHens(); renderAll(); requestAnimationFrame(render);
+if(!had||!S.seen) intro();
+setInterval(()=>{ if($("modal").hidden) renderStats(); },5000);
+</script></body></html>
